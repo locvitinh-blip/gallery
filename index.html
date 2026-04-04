@@ -3,37 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yên Lộc - Auto Gallery</title>
+    <title>Yến Lộc - Auto Gallery Pro</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <style>
-        body { background: #000; color: #fff; margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; }
-        .container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: radial-gradient(circle, #111 0%, #000 100%); }
-        .header { margin-bottom: 10px; color: #38bdf8; font-weight: bold; font-size: 24px; text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 0 15px rgba(56, 189, 248, 0.5); }
+        :root { --main-color: #38bdf8; }
+        body { background: #000; color: #fff; margin: 0; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         
-        /* Cấu hình khung ảnh */
-        .swiper { width: 100%; padding: 50px 0; }
-        .swiper-slide { width: 280px; height: 400px; border-radius: 20px; overflow: hidden; background: #1a1a1a; cursor: pointer; border: 1px solid #333; transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .swiper-slide:hover { border-color: #38bdf8; transform: translateY(-10px); }
-        .swiper-slide img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.5s; }
-        .swiper-slide img.loaded { opacity: 1; }
+        /* Màn hình chính */
+        .container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: radial-gradient(circle, #1a1a1a 0%, #000 100%); }
+        .header { margin-bottom: 15px; color: var(--main-color); font-weight: bold; font-size: 24px; text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 0 15px rgba(56, 189, 248, 0.5); }
+        
+        /* Swiper Ngoài (3D Coverflow) */
+        .mySwiper { width: 100%; padding: 50px 0; }
+        .mySwiper .swiper-slide { width: 280px; height: 400px; border-radius: 20px; overflow: hidden; background: #111; cursor: pointer; border: 1px solid #333; transition: 0.3s; }
+        .mySwiper .swiper-slide:hover { border-color: var(--main-color); transform: scale(1.05); }
+        .mySwiper img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: 0.5s; }
+        .mySwiper img.loaded { opacity: 1; }
 
-        /* Xem ảnh toàn màn hình */
-        #fs-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        #fs-view img { max-width: 95%; max-height: 95%; object-fit: contain; border-radius: 10px; box-shadow: 0 0 50px rgba(0,0,0,1); }
-        .close-btn { position: absolute; top: 20px; right: 30px; font-size: 60px; color: #38bdf8; cursor: pointer; line-height: 1; }
+        /* Màn hình Phóng lớn (Fullscreen) */
+        #fs-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); display: none; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(15px); }
+        .fsSwiper { width: 100%; height: 85%; }
+        .fsSwiper .swiper-slide { display: flex; align-items: center; justify-content: center; }
+        .fsSwiper img { max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 10px; box-shadow: 0 0 30px rgba(56, 189, 248, 0.3); border: 1px solid #444; }
         
-        /* Hiệu ứng chờ load */
-        .loader { border: 4px solid #222; border-top: 4px solid #38bdf8; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        /* Nút điều khiển */
+        .close-btn { position: absolute; top: 20px; right: 30px; font-size: 50px; color: var(--main-color); cursor: pointer; z-index: 10001; transition: 0.3s; }
+        .close-btn:hover { transform: rotate(90deg); color: #fff; }
+        .swiper-button-next, .swiper-button-prev { color: var(--main-color) !important; }
+        .swiper-pagination-bullet-active { background: var(--main-color) !important; }
+
+        /* Loading */
+        #status-container { text-align: center; }
+        .loader { border: 4px solid #222; border-top: 4px solid var(--main-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <div class="header">YÊN LỘC - AUTO SCAN</div>
+        <div class="header">YẾN LỘC - DIGITAL HUB</div>
         <div id="status-container">
-            <div class="loader" id="main-loader"></div>
-            <p id="msg" style="color: #38bdf8; margin-top: 15px; font-size: 14px;">Đang quét thư mục ảnh...</p>
+            <div class="loader"></div>
+            <p style="color: var(--main-color); margin-top: 15px;">Đang tải dữ liệu từ GitHub...</p>
         </div>
         
         <div class="swiper mySwiper">
@@ -41,78 +52,108 @@
         </div>
     </div>
 
-    <div id="fs-view" onclick="closeFS()">
-        <span class="close-btn">&times;</span>
-        <img id="fs-img" src="" />
+    <div id="fs-view">
+        <span class="close-btn" onclick="closeFS()">&times;</span>
+        <div class="swiper fsSwiper">
+            <div id="fs-wrapper" class="swiper-wrapper"></div>
+            <div class="swiper-button-next"></div>
+            <div class="swiper-button-prev"></div>
+            <div class="swiper-pagination"></div>
+        </div>
+        <p style="color: #666; font-size: 12px; margin-top: 10px;">Chế độ: Tự động chuyển ảnh (Autoplay)</p>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script>
-        // --- CẤU HÌNH GITHUB ---
-        const GITHUB_USER = "locvitinh-blip";  // Ví dụ: locvitinh
-        const GITHUB_REPO = "gallery";     // Ví dụ: YenLoc_Rescue
-        const FOLDER_PATH = "img";          // Tên thư mục bạn vừa tạo
+        /** --- CẤU HÌNH THÔNG TIN CỦA BẠN --- **/
+        const GITHUB_USER = "locvitinh-blip"; 
+        const GITHUB_REPO = "gallery";
+        const FOLDER_PATH = "img"; 
 
-        async function initGallery() {
+        let mainSwiper, fsSwiper;
+        const effects = ["flip", "fade", "cube", "cards"]; // Danh sách hiệu ứng
+
+        async function loadGallery() {
             const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${FOLDER_PATH}`;
             
             try {
-                const res = await fetch(apiUrl);
-                const files = await res.json();
+                const response = await fetch(apiUrl);
+                const files = await response.json();
+                
+                if (!Array.isArray(files)) throw new Error();
+
                 const wrapper = document.getElementById('wrapper');
-                let foundImages = 0;
+                const fsWrapper = document.getElementById('fs-wrapper');
+                let count = 0;
 
-                if (!Array.isArray(files)) throw new Error("Thư mục không tồn tại");
-
-                files.forEach(file => {
-                    // Chỉ lấy file định dạng ảnh
+                files.forEach((file, index) => {
                     if (file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
                         const imgUrl = file.download_url;
+                        
+                        // Tạo slide cho màn hình chính
                         const slide = document.createElement('div');
                         slide.className = 'swiper-slide';
-                        slide.onclick = () => openFS(imgUrl);
+                        slide.onclick = () => openFS(count); // Dùng count để tránh lệch index nếu có file không phải ảnh
                         slide.innerHTML = `<img src="${imgUrl}" onload="this.classList.add('loaded')" loading="lazy">`;
                         wrapper.appendChild(slide);
-                        foundImages++;
+
+                        // Tạo slide cho màn hình phóng lớn
+                        const fsSlide = document.createElement('div');
+                        fsSlide.className = 'swiper-slide';
+                        fsSlide.innerHTML = `<img src="${imgUrl}">`;
+                        fsWrapper.appendChild(fsSlide);
+                        
+                        count++;
                     }
                 });
 
-                if (foundImages > 0) {
-                    document.getElementById('status-container').style.display = 'none';
-                    startSwiper();
-                } else {
-                    document.getElementById('msg').innerText = "Thư mục 'img' đang trống!";
-                    document.getElementById('main-loader').style.display = 'none';
-                }
+                document.getElementById('status-container').style.display = 'none';
+                initSwipers();
 
             } catch (err) {
-                document.getElementById('msg').innerText = "Lỗi: Không tìm thấy thư mục hoặc sai Username/Repo";
-                document.getElementById('main-loader').style.display = 'none';
+                document.getElementById('status-container').innerHTML = "<p style='color:red'>Lỗi: Không tìm thấy ảnh hoặc sai cấu hình!</p>";
             }
         }
 
-        function startSwiper() {
-            new Swiper(".mySwiper", {
+        function initSwipers() {
+            // Khởi tạo Swiper ngoài (3D)
+            mainSwiper = new Swiper(".mySwiper", {
                 effect: "coverflow",
-                grabCursor: true,
                 centeredSlides: true,
                 slidesPerView: "auto",
                 loop: true,
-                autoplay: { delay: 2500, disableOnInteraction: false },
-                coverflowEffect: { rotate: 30, stretch: 0, depth: 150, modifier: 1, slideShadows: true }
+                autoplay: { delay: 3000, disableOnInteraction: false },
+                coverflowEffect: { rotate: 30, stretch: 0, depth: 100, modifier: 1, slideShadows: true }
+            });
+
+            // Khởi tạo Swiper phóng lớn (Mặc định là Fade)
+            fsSwiper = new Swiper(".fsSwiper", {
+                effect: "fade",
+                loop: true,
+                autoplay: { delay: 3500, disableOnInteraction: false },
+                navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" },
+                pagination: { el: ".swiper-pagination", clickable: true },
             });
         }
 
-        function openFS(url) {
-            document.getElementById('fs-img').src = url;
+        function openFS(index) {
+            // NGẪU NHIÊN hiệu ứng mỗi lần mở
+            const randomEffect = effects[Math.floor(Math.random() * effects.length)];
+            fsSwiper.params.effect = randomEffect;
+            
             document.getElementById('fs-view').style.display = 'flex';
+            fsSwiper.update();
+            fsSwiper.slideToLoop(index, 0);
+            fsSwiper.autoplay.start();
         }
 
         function closeFS() {
             document.getElementById('fs-view').style.display = 'none';
+            fsSwiper.autoplay.stop();
         }
 
-        initGallery();
+        // Chạy ứng dụng
+        loadGallery();
     </script>
 </body>
 </html>

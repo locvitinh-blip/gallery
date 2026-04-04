@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yên Lộc - Digital Gallery</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <style>
+        body { background: #000; color: #fff; margin: 0; font-family: sans-serif; overflow: hidden; }
+        .container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        .header { margin-bottom: 20px; color: #38bdf8; font-weight: bold; font-size: 22px; text-transform: uppercase; letter-spacing: 3px; text-shadow: 0 0 10px rgba(56,189,248,0.5); }
+        
+        /* Swiper Center */
+        .swiper { width: 100%; padding: 50px 0; }
+        .swiper-slide { width: 280px; height: 380px; border-radius: 15px; overflow: hidden; background: #111; cursor: pointer; transition: 0.3s; }
+        .swiper-slide img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.5s; }
+        .swiper-slide img.loaded { opacity: 1; }
+
+        /* Fullscreen Overlay */
+        #fs-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: none; z-index: 9999; align-items: center; justify-content: center; }
+        #fs-view img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .close-x { position: absolute; top: 20px; right: 30px; font-size: 45px; color: #38bdf8; cursor: pointer; font-weight: bold; }
+
+        /* Loading Spinner */
+        .loader { border: 3px solid #222; border-top: 3px solid #38bdf8; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; position: absolute; top: 45%; left: 45%; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">YÊN LỘC - DIGITAL GALLERY</div>
+        <div class="swiper mySwiper">
+            <div id="gallery-wrapper" class="swiper-wrapper">
+                </div>
+        </div>
+        <div style="color: #444; font-size: 12px; margin-top: 10px;">Bấm vào ảnh để xem toàn màn hình</div>
+    </div>
+
+    <div id="fs-view">
+        <span class="close-x" onclick="closeFS()">&times;</span>
+        <img id="fs-img" src="" />
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script>
+        const blogURL = "https://yenlocne.blogspot.com";
+        let allPhotos = [];
+        let slideIndex = 0;
+        let slideTimer;
+
+        // Hàm lấy ảnh từ Blogspot bằng JavaScript
+        async function loadPhotos() {
+            const api = `${blogURL.rstrip('/')}/feeds/posts/default?alt=json&max-results=500`;
+            try {
+                const response = await fetch(api);
+                const data = await response.json();
+                const entries = data.feed.entry || [];
+                const wrapper = document.getElementById('gallery-wrapper');
+
+                entries.forEach(entry => {
+                    let url = "";
+                    if (entry.media$thumbnail) {
+                        url = entry.media$thumbnail.url.replace('/s72-c/', '/s1600/');
+                    }
+                    if (url) {
+                        allPhotos.push(url);
+                        const slide = document.createElement('div');
+                        slide.className = 'swiper-slide';
+                        slide.onclick = () => openFS(url);
+                        slide.innerHTML = `<div class="loader"></div><img src="${url.replace('/s1600/', '/s400/')}" onload="this.classList.add('loaded'); this.previousElementSibling.remove()">`;
+                        wrapper.appendChild(slide);
+                    }
+                });
+
+                // Khởi tạo Swiper sau khi load ảnh xong
+                initSwiper();
+            } catch (e) { console.error("Lỗi: ", e); }
+        }
+
+        function initSwiper() {
+            new Swiper(".mySwiper", {
+                effect: "coverflow",
+                grabCursor: true,
+                centeredSlides: true,
+                slidesPerView: "auto",
+                loop: true,
+                autoplay: { delay: 2500 },
+                coverflowEffect: { rotate: 30, stretch: 0, depth: 100, modifier: 1, slideShadows: true },
+            });
+        }
+
+        function openFS(url) {
+            slideIndex = allPhotos.indexOf(url);
+            document.getElementById('fs-img').src = url;
+            document.getElementById('fs-view').style.display = 'flex';
+            
+            clearInterval(slideTimer);
+            slideTimer = setInterval(() => {
+                slideIndex = (slideIndex + 1) % allPhotos.length;
+                document.getElementById('fs-img').src = allPhotos[slideIndex];
+            }, 4000);
+        }
+
+        function closeFS() {
+            document.getElementById('fs-view').style.display = 'none';
+            clearInterval(slideTimer);
+        }
+
+        String.prototype.rstrip = function(char) {
+            return this.replace(new RegExp(char + "+$"), "");
+        };
+
+        loadPhotos();
+    </script>
+</body>
+</html>
